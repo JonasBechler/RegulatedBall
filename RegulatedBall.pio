@@ -1,0 +1,54 @@
+.program RegulatedBall
+
+
+.wrap_target
+entry:                   ;<---o
+	out y 32            ;    |         //get max count to y from OSR
+idle:                    ;<o  |
+	jmp pin idle        ;>o  |         //stay there until the pin is low
+counter:                 ;<---+-----o  
+	jmp pin output      ;----+->o  |   //if pin rises output the data
+	jmp y-- counter     ;----+--+->o   //if pin is still low and y > 0 decrement y
+failloop:                ;<o  |  |
+     mov y pins          ; |  |  |
+     jmp !y failloop     ;>o  |  |
+     irq wait 1          ;    |  |
+     jmp entry           ;--->o  |      //if IRQ1 is resetet jump back to start
+output:                  ;<------o
+	in y 32             ;              //mov all bits of y to ISR
+	push                ;              //push ISR
+	irq wait 0          ;              //rise IRQ0 to let core know that data is available and wait for prozessing
+.wrap
+	
+
+% c-sdk {
+static inline void RegulatedBall_program_init(PIO pio, uint sm, uint offset, uint pin) {
+     //get default config
+     pio_sm_config c = RegulatedBall_program_get_default_config(offset);
+     
+     //set output Pins
+     //set the state machine's JMP pin to one pin
+     sm_config_set_jmp_pin(&c, pin);
+     //init gpio for this pio
+     pio_gpio_init(pio, pin);
+     //set pin as Input
+     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+
+     //configuer interrupt lines to core
+     //pio"I"->inte"J" = PIO_IRQ0_INTE_SM"K"_BITS -> signal on the J interrupt line(2 in total) when a SM in PIO I raises irq K.
+     pio0->inte0 = PIO_IRQ0_INTE_SM0_BITS;
+     pio0->inte1 = PIO_IRQ0_INTE_SM1_BITS;
+
+     //set clock divider (without at 125MHz => 1 instruction in 8ns) 
+     int cyclesPerLoop = 2;
+     //sm_config_set_clkdiv(&c, 65535);
+     
+     // Load our configuration, and jump to the start of the program
+     pio_sm_init(pio, sm, offset, &c);
+     pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+
+	
+
