@@ -1,16 +1,10 @@
 cmake_minimum_required (VERSION 3.12)
-set(PICO_SDK_FETCH_FROM_GIT on)
-
 
 project (RegulatedBall)
 
-add_library(VL53L0X INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/lib/VL53L0X/VL53L0X.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/lib/VL53L0X/VL53L0X.h
-)
+add_subdirectory(lib/VL53L0X)
 
 
-target_compile_definitions(VL53L0X INTERFACE MY_DEFINE=3)
 
 add_executable(RegulatedBall
 	RegulatedBall.c)
@@ -19,7 +13,6 @@ add_executable(RegulatedBall
 
 
 
-target_include_directories(VL53L0X INTERFACE S{CMAKE_CURRENT_LIST_DIR}/lib/VL53L0X)
 
 target_link_libraries(RegulatedBall PRIVATE
 	pico_stdlib
