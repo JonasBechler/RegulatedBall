@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 3.12)
 
-project (RegulatedBall)
 
 add_subdirectory(lib/VL53L0X)
+
+project (RegulatedBall)
+
 
 
 
@@ -14,7 +16,7 @@ add_executable(RegulatedBall
 
 
 
-target_link_libraries(RegulatedBall PRIVATE
+target_link_libraries(RegulatedBall
 	pico_stdlib
 	pico_multicore
 	hardware_pio
